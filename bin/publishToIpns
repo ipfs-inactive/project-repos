@@ -26,12 +26,11 @@ main = ->
 
 publishToIpns = ->
   ipfsHash = execv("#{IPFS} add -r -q public | tail -n 1").output.trim()
-  ipnsResponse = execv("#{IPFS} name publish #{ipfsHash}").output
-  ipnsName = ipnsResponse.match(/Published to ([0-9A-Za-z]+)/)[1]
-  fetch ipnsName
+  execv "#{IPFS} name publish #{ipfsHash}"
+  fetch()
   killDaemon()
 
-fetch = (ipnsName) ->
+fetch = ->
   execv "
     wget
       --directory-prefix=tmp
@@ -39,7 +38,7 @@ fetch = (ipnsName) ->
       --tries=60
       --waitretry=60
       --wait=1
-      https://ipfs.io/ipns/#{ipnsName}/
+      https://ipfs.io/ipns/#{PEER_ID}/
     "
 
 killDaemon = -> execv "kill -9 #{daemon.pid}"
