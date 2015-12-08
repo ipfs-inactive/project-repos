@@ -28,16 +28,18 @@ publishToIpns = ->
   ipfsHash = execv("#{IPFS} add -r -q public | tail -n 1").output.trim()
   ipnsResponse = execv("#{IPFS} name publish #{ipfsHash}").output
   ipnsName = ipnsResponse.match(/Published to ([0-9A-Za-z]+)/)[1]
-  wait = 2
-  for i in [1..12]
-    {code, output} = execv "curl -I https://ipfs.io/ipns/#{ipnsName}/"
-    break if code is 0 and output.match(/HTTP.+ 200 OK/)
-    wait *= 2
-    sleep wait
+  fetch ipnsName
   killDaemon()
 
-  # unless ipnsName is 'QmbCMUZw6JFeZ7Wp9jkzbye3Fzp2GGcPgC3nmeUjfVF87n'
-  #   throw new Error "unexpected
+fetch = (ipnsName) ->
+  execv "
+    wget
+      --page-requisites
+      --tries=60
+      --waitretry=60
+      --wait=1
+      https://ipfs.io/ipns/#{ipnsName}/
+    "
 
 killDaemon = -> execv "kill -9 #{daemon.pid}"
 
