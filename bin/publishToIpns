@@ -12,7 +12,7 @@ PRIVATE_KEY = process.env.PRIVATE_KEY or throw new Error "Please set env var PRI
 daemon = null
 
 main = ->
-  daemon = execv "#{IPFS} init"
+  daemon = execv "#{IPFS} init --empty-repo"
   daemon = execv "#{IPFS} config Identity.PeerID #{PEER_ID}"
   daemon = exec  "#{IPFS} config Identity.PrivKey '#{PRIVATE_KEY}'"
 
