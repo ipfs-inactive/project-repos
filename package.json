@@ -7,7 +7,7 @@
   "scripts": {
     "build": "browserify src/index.coffee --transform coffeeify --extension='.coffee' -g uglifyify | uglifyjs --mangle --compress dead_code,sequences,conditionals,booleans,unused,if_return,join_vars,drop_debugger > public/bundle.js",
     "dev": "src/server/dev.coffee",
-    "publishToGithubPages": "npm run build && bin/publish",
+    "publishToGithubPages": "npm run build && bin/publishToGithubPages",
     "publishToIpns": "npm run build && bin/publishToIpns",
     "watch": "nodemon --watch src --watch public/index.html  --watch public/styles --exec 'browserify' src/index.coffee --transform coffeeify --extension='.coffee' --outfile public/bundle.js"
   },
