@@ -16,6 +16,7 @@
     "bluebird": "^3.0.6",
     "browser-sync": "^2.8.0",
     "browserify": "^11.0.0",
+    "chalk": "^1.1.1",
     "coffee-script": "^1.9.3",
     "coffeeify": "^1.1.0",
     "datatables": "^1.10.9",
@@ -29,7 +30,6 @@
     "octokat": "^0.4.12",
     "request-promise": "^1.0.2",
     "shelljs": "^0.5.3",
-    "sleep": "^3.0.0",
     "teacup": "^2.0.0",
     "uglify-js": "^2.4.23",
     "uglifyify": "^3.0.1"
