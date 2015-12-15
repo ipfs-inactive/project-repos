@@ -47,6 +47,6 @@ fetch = (url) ->
       #{url}
     "
 
-killDaemon = -> run "kill -9 #{daemon.pid}"
+killDaemon = -> run "kill -9 #{daemon.pid}" if daemon?.pid?
 
 main()
