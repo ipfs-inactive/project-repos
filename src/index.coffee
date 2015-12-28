@@ -83,7 +83,7 @@ matrix = renderable (repos) ->
         th class: 'left', -> "IPFS Repo"
         th class: 'left', -> "Travis CI"
         th class: 'left', -> "Circle CI"
-        th -> "exists"
+        th -> "(exists)"
         th -> "> 500 chars"
         for name of README_ITEMS
           th -> name

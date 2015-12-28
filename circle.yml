@@ -2,4 +2,8 @@ deployment:
   production:
     branch: master
     commands:
-      - npm run publish
+      - npm run publishToIpns
+      - npm run publishToGithubPages
+    branch: ipns
+    commands:
+      - npm run publishToIpns

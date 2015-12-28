@@ -1,0 +1,52 @@
+#!/usr/bin/env coffee
+
+require('dotenv').load()
+{d, json, log, run, type} = require 'lightsaber'
+{exec, exit} = require 'shelljs'
+{clone, defaults, merge, isEmpty} = require 'lodash'
+chalk = require 'chalk'
+
+IPFS = "node_modules/.bin/ipfs --config tmp/ipfs"
+PEER_ID = process.env.PEER_ID or throw new Error "Please set env var PEER_ID"
+PRIVATE_KEY = process.env.PRIVATE_KEY or throw new Error "Please set env var PRIVATE_KEY"
+
+daemon = null
+
+main = ->
+  run "#{IPFS} init --force --empty-repo"
+  run "#{IPFS} config Identity.PeerID #{PEER_ID}"
+  run "#{IPFS} config Identity.PrivKey '#{PRIVATE_KEY}'", quiet: true
+
+  daemon = run "#{IPFS} daemon", async: true
+  try
+    daemon.stdout.on 'data', (data) ->
+      if data.match /Daemon is ready/
+        publishToIpns()
+  catch error
+    killDaemon()
+    throw error
+
+publishToIpns = ->
+  ipfsHash = run("#{IPFS} add -r -q public | tail -n 1").output.trim()
+  run "#{IPFS} name publish #{ipfsHash}"
+  fetch "http://localhost:8080/ipfs/#{ipfsHash}"
+  fetch "https://ipfs.io/ipfs/#{ipfsHash}"
+  fetch "https://ipfs.io/ipns/#{PEER_ID}"
+  killDaemon()
+
+fetch = (url) ->
+  run "
+    wget
+      --directory-prefix=tmp/wget
+      --force-directories
+      --page-requisites
+      --timeout=600
+      --wait=1
+      --tries=60
+      --waitretry=60
+      #{url}
+    "
+
+killDaemon = -> run "kill -9 #{daemon.pid}" if daemon?.pid?
+
+main()
