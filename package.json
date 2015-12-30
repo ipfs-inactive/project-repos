@@ -16,7 +16,7 @@
     "browser-sync": "^2.8.0",
     "browserify": "^11.0.0",
     "coffee-script": "^1.9.3",
-    "coffeeify": "^1.1.0",
+    "coffeeify": "^2.0.0",
     "datatables": "^1.10.9",
     "gh-pages": "^0.5.0",
     "jquery": "^2.1.4",
