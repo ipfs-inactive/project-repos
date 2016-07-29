@@ -125,6 +125,7 @@ matrix = renderable (repos) ->
         th class: 'left', -> "IPFS Repo"  # Name
         th class: 'left', -> "Travis CI"  # Builds
         th class: 'left', -> "Circle CI"  # Builds
+        th class: 'left', -> "Last commit"  # Last commit
         th -> "exists"                    # README.md
         th -> "> 500 chars"               # README.md
         th -> "license"                   # Files
@@ -142,6 +143,7 @@ matrix = renderable (repos) ->
           td class: 'left', -> a href: "https://github.com/#{ORG}/#{repo.name}", -> repo.name     # Name
           td class: 'left', -> travis repo.name                                                   # Builds
           td class: 'left', -> circle repo.name                                                   # Builds
+          td class: 'left', -> commits repo.name                                                  # Last commit
           td class: 'no-padding', -> check repo.files[README]                                     # README.md
           td class: 'no-padding', -> check(repo.files[README]?.length > 500)                      # README.md
           td class: 'no-padding', -> check repo.files[LICENSE]                                    # Files
@@ -169,6 +171,12 @@ travis = renderable (repoName) ->
 circle = renderable (repoName) ->
   a href: "https://circleci.com/gh/#{ORG}/#{repoName}", ->
     img src: "https://circleci.com/gh/#{ORG}/#{repoName}.svg?style=svg", onError: "this.src = 'images/circle-ci-no-builds.svg'"
+
+commits = renderable (repoName) ->
+  request.get('https://api.github.com/repos/ipfs/#{repoName}/commits')
+  .then (commits) ->
+      a href: "https://github.com/#{ORG}/#{repoName}/commits/master", ->
+        repos[0].commits.committer.date
 
 loadStats = ->
   github.rateLimit.fetch()
