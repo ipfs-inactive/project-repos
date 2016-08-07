@@ -5,8 +5,6 @@ request = require 'request-promise'
 {merge, round, sample, size, sortBy} = require 'lodash'
 Wave = require 'loading-wave'
 $ = require 'jquery'
-require('datatables.net')()
-require('datatables.net-fixedheader')()
 {
   a
   div
@@ -101,6 +99,7 @@ class RepoMatrix
     .then (repos) =>
       @getFiles repos
 
+  # recursively fetch all "pages" (groups of up to 100 repos) from Github API
   @thisAndFollowingPages = (thisPage) ->
     unless thisPage.nextPage?
       return Promise.resolve thisPage
@@ -111,7 +110,6 @@ class RepoMatrix
       repos = thisPage
       repos.push followingPages...
       repos
-
 
   @showMatrix: (repos) ->
     $('#matrix').append @matrix repos

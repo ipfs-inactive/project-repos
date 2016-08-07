@@ -12,13 +12,15 @@
     "dev:server": "src/server/dev.coffee",
     "dev:watch": "nodemon --watch src --watch public/index.html  --watch public/styles --exec 'browserify' src/index.coffee --transform coffeeify --extension='.coffee' --outfile public/bundle.js",
     "publish": "npm-run-all --silent build ipfs",
-    "ipfs": "open https://ipfs.io/ipfs/`ipfs add -q -r public | tail -n 1`"
+    "ipfs": "open https://ipfs.io/ipfs/`ipfs add -q -r public | tail -n 1`",
+    "test": "mocha"
   },
   "dependencies": {},
   "devDependencies": {
     "bluebird": "^3.4.1",
     "browser-sync": "^2.14.0",
     "browserify": "^13.1.0",
+    "chai": "^3.5.0",
     "coffee-script": "^1.10.0",
     "coffeeify": "^2.0.1",
     "datatables.net": "^1.10.12",
@@ -29,6 +31,7 @@
     "lightsaber": "^0.6.5",
     "loading-wave": "0.0.2",
     "lodash": "^4.14.1",
+    "mocha": "^3.0.0",
     "nodemon": "^1.10.0",
     "npm-run-all": "^2.3.0",
     "octokat": "^0.4.17",
