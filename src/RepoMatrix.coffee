@@ -70,6 +70,12 @@ class RepoMatrix
   ]
 
   github = new Octokat
+    # random accounts for development;
+    # api is throttled per account
+    # username: "irGAYpwGxP"
+    # password: "irGAYpwGxPfFtVLmHK84KNyjP"
+    # username: "8DvrWa6nBCevZt"
+    # password: "wojY4o9yWyRKDN"
 
   @start: ->
     @wave = @loadingWave()
