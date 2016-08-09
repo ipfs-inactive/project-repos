@@ -21,3 +21,7 @@ td, th {
 td.left, th.left {
   text-align: left;
 }
+
+.hide {
+  display: none;
+}

@@ -1,8 +1,8 @@
 Promise = require 'bluebird'
 Octokat = require 'octokat'
 request = require 'request-promise'
-{log} = require 'lightsaber'
-{flatten, merge, round, sample, size, sortBy} = require 'lodash'
+{log, pjson} = require 'lightsaber'
+{get, flatten, keys, merge, round, sample, size, sortBy} = require 'lodash'
 Wave = require 'loading-wave'
 $ = require 'jquery'
 require('datatables.net')()
@@ -69,6 +69,31 @@ class RepoMatrix
     CONTRIBUTE = 'CONTRIBUTE.md'
   ]
 
+  CI =
+    travis:
+      addProject: (repoFullName) -> "https://travis-ci.org/#{repoFullName}"
+      urlTemplate: (repoFullName) -> "https://travis-ci.org/#{repoFullName}"
+      apiTemplate: (repoFullName) -> "https://api.travis-ci.org/repos/#{repoFullName}/branches/master"
+      apiStatePath: "branch.state"
+    circle:
+      addProject: -> "https://circleci.com/add-projects"
+      urlTemplate: (repoFullName) -> "https://circleci.com/gh/#{repoFullName}"
+      apiTemplate: (repoFullName) -> "https://circleci.com/api/v1.1/project/github/#{repoFullName}/tree/master"
+      apiStatePath: "[0].outcome"
+
+  # roughly in order of best -> worst states
+  BUILD_STATES =
+    passed: 10
+    success: 10
+    canceled: 20
+    unknown: 25
+    none: 30
+    no_tests: 35
+    invalid: 40
+    timedout: 45
+    errored: 50
+    failed: 60
+
   github = new Octokat
 
   @start: ->
@@ -121,10 +146,14 @@ class RepoMatrix
 
   @showMatrix: (repos) ->
     $('#matrix').append @matrix repos
-    $('table').DataTable
-      paging: false
-      searching: false
-      fixedHeader: true
+    @loadCiBadges(repos)
+    .catch (error) =>
+      console.error error
+    .then =>
+      $('table').DataTable
+        paging: false
+        searching: false
+        fixedHeader: true
 
   @getFiles: (repos) ->
     repos = sortBy repos, 'fullName'
@@ -168,8 +197,8 @@ class RepoMatrix
         for repo in repos
           tr =>
             td class: 'left', => a href: "https://github.com/#{repo.fullName}", => repo.fullName     # Name
-            td class: 'left', => @travis repo.fullName                                               # Builds
-            td class: 'left', => @circle repo.fullName                                               # Builds
+            td class: 'left', id: "#{@slug(repo.fullName)}-travis"                                   # Builds
+            td class: 'left', id: "#{@slug(repo.fullName)}-circle"                                   # Builds
             td class: 'no-padding', => @check repo.files[README]                                     # README.md
             td class: 'no-padding', => @check(repo.files[README]?.length > 500)                      # README.md
             td class: 'no-padding', => @check repo.files[LICENSE]                                    # Files
@@ -184,19 +213,46 @@ class RepoMatrix
             td => repo.stargazersCount.toString()
             td => repo.openIssuesCount.toString()
 
+  @loadCiBadges: (repos) =>
+    promises = for ciBrand, ciData of CI
+      do (ciBrand, ciData) =>
+        {addProject, apiTemplate, apiStatePath, urlTemplate} = ciData
+        Promise.map repos, (repo) =>
+          new Promise (resolve) =>
+            apiUrl = apiTemplate(repo.fullName)
+            $.getJSON apiUrl
+            .fail (err) =>
+              if err.status is 404
+                @addCiBadge repo.fullName, ciBrand, 'none', addProject
+              else
+                console.error err
+              resolve()
+            .done (data) =>
+              state = get(data, apiStatePath)
+              if state in keys(BUILD_STATES)
+                @addCiBadge repo.fullName, ciBrand, state, urlTemplate
+              else
+                @addCiBadge repo.fullName, ciBrand, 'unknown', urlTemplate
+                console.error "Unknown build state `#{state}` -- please add to
+                  BUILD_STATES and add a badge to images/builds/#{state}.svg"
+                  # " -- selector: #{apiStatePath} -- full data:\n#{pjson data}"
+              resolve()
+    Promise.all promises
+
+  @addCiBadge: (repoFullName, ciBrand, state, urlTemplate) =>
+    tableCell = $("##{@slug(repoFullName)}-#{ciBrand}")
+    stateHtml = render -> span class: 'hide', -> BUILD_STATES[state].toString()
+    badgeHtml = render ->
+      a href: urlTemplate(repoFullName), _target: '_repos', ->
+        img src: "images/builds/#{state}.svg"
+    tableCell.append(stateHtml)
+    tableCell.append(badgeHtml)
+
   @check: renderable (success) ->
     if success
       div class: 'success', -> '✓'
     else
       div class: 'failure', -> '✗'
-
-  @travis: renderable (repoFullName) ->
-    a href: "https://travis-ci.org/#{repoFullName}", ->
-      img src: "https://travis-ci.org/#{repoFullName}.svg?branch=master"
-
-  @circle: renderable (repoFullName) ->
-    a href: "https://circleci.com/gh/#{repoFullName}", ->
-      img src: "https://circleci.com/gh/#{repoFullName}.svg?style=svg", onError: "this.parentElement.href = 'https://circleci.com/add-projects'; this.src = 'images/circle-ci-no-builds.svg'"
 
   @loadStats: ->
     github.rateLimit.fetch()
@@ -208,5 +264,8 @@ class RepoMatrix
       now = (new Date).getTime() / 1000  # seconds
       minutesUntilReset = (reset - now) / 60  # minutes
       "Github API calls: #{remaining} remaining of #{limit} limit per hour; clean slate in: #{round minutesUntilReset, 1} minutes"
+
+  @slug: (string) ->
+    string.replace(/\W+/, '-')
 
 module.exports = RepoMatrix
